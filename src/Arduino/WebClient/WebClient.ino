@@ -2,14 +2,17 @@
 #include <UIPEthernet.h>
 
 EthernetClient client;
-//адрес сервера, на который передаём GET запрос
+//server address
 char server[] = "192.168.1.28";
-//Настройки сетевой карты на ардуино
+//server port
+int serverPort = 8080;
+
+//my address
 uint8_t mac[6] = {0x00,0x01,0x02,0x03,0x04,0x05};
 IPAddress myIP(192,168,1,63);
 
-//Pin с которого собираем информацию
-int inputPin = 4;
+//Pin DHT
+int inputPin = 3;
 #define DHTTYPE DHT11
 DHT dht(inputPin, DHTTYPE);
 
@@ -21,9 +24,10 @@ void setup() {
 }
 
 void loop() {
-  float h = dht.readHumidity(); //Измеряем влажность
-  float t = dht.readTemperature(); //Измеряем температуру
-  doGet(String(t)); //передаём данные на сервер  
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  Serial.println(t);
+  doGet(String(t)); //seng GET request  
   while(client.connected()){
     if(client.available()){
       char c = client.read();
@@ -35,9 +39,9 @@ void loop() {
 // http get request
 void doGet(String param) {
     Ethernet.begin(mac,myIP);
-    if (client.connect(server,80)){
+    if (client.connect(server,serverPort)){
       Serial.println("Connected to server");
-      client.print("GET /");
+      client.print("GET /sens?t=");
       client.print(param);
       client.println(" HTTP/1.1");
       client.print("Host: ");
